@@ -15,7 +15,7 @@ type Config struct {
 	DBPass string
 	DBName string
 
-	OpenAIKey string
+	AIKey string
 
 	JWTSecret string
 }
@@ -36,7 +36,7 @@ func Load() (*Config, error) {
 		DBPass: os.Getenv("DB_PASS"),
 		DBName: os.Getenv("DB_NAME"),
 
-		OpenAIKey: os.Getenv("OPENAI_API_KEY"),
+		AIKey: os.Getenv("API_AI_KEY"),
 
 		JWTSecret: os.Getenv("JWT_SECRET"),
 	}, nil

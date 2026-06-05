@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/EmranP/Design-Struct-Project-AI/backend/configs"
+	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/ai/gemini"
 	authHandle "github.com/EmranP/Design-Struct-Project-AI/backend/internal/auth/handler"
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/auth/middleware"
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/auth/password"
@@ -74,9 +75,19 @@ func main() {
 		)
 
 	v := validator.New()
+	aiService, err := gemini.New(
+		context.Background(),
+		cfg.AIKey,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	generator := generationservice.New(
 		generationRepo,
 		templateRepo,
+		projectRepo,
+		aiService,
 	)
 	zipService := zip.New()
 	// UseCase

@@ -28,7 +28,7 @@ func (u *projectUseCase) Add(
 	ctx context.Context,
 	userID uuid.UUID,
 	p *dto.ProjectRequest,
-) error {
+) (uuid.UUID, error) {
 
 	project := &domain.Project{
 		ID: uuid.New(),
@@ -46,14 +46,17 @@ func (u *projectUseCase) Add(
 		Features: p.Features,
 
 		AdditionalInfo: p.AdditionalInfo,
-
-		Prompt: p.Prompt,
 	}
 
-	return u.projectRepo.Create(
+	newProject, err := u.projectRepo.Create(
 		ctx,
 		project,
 	)
+	if err != nil {
+		return uuid.UUID{}, err
+	}
+
+	return newProject, nil
 }
 
 func (u *projectUseCase) FindByID(
@@ -103,7 +106,6 @@ func (u *projectUseCase) FindByUserID(
 			Architecture:   p.Architecture,
 			Features:       p.Features,
 			AdditionalInfo: p.AdditionalInfo,
-			Prompt:         p.Prompt,
 			CreatedAt:      p.CreatedAt,
 			UpdatedAt:      p.UpdatedAt,
 		}
@@ -125,7 +127,6 @@ func (u *projectUseCase) Edit(
 		Architecture:   data.Architecture,
 		Features:       data.Features,
 		AdditionalInfo: data.AdditionalInfo,
-		Prompt:         data.Prompt,
 	}
 
 	errUpdate := u.projectRepo.Update(ctx, id, userID, updateProject)

@@ -13,7 +13,7 @@ type ProjectUseCase interface {
 		ctx context.Context,
 		userID uuid.UUID,
 		p *dto.ProjectRequest,
-	) error
+	) (uuid.UUID, error)
 
 	FindByID(
 		ctx context.Context,

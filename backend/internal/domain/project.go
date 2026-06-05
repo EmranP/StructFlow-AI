@@ -16,7 +16,6 @@ type Project struct {
 	Architecture   string
 	Features       string
 	AdditionalInfo string
-	Prompt         string
 
 	CreatedAt time.Time
 	UpdatedAt time.Time

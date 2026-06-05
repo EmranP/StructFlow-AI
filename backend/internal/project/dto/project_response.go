@@ -21,8 +21,6 @@ type ProjectResponse struct {
 
 	AdditionalInfo string `json:"additionalInfo"`
 
-	Prompt string `json:"prompt"`
-
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }

@@ -76,10 +76,6 @@ func (u *authUseCase) Register(
 	existing, err := u.userRepo.
 		GetByEmail(ctx, email)
 
-	if err != nil {
-		return err
-	}
-
 	if existing != nil {
 		return customerrors.ErrUserAlreadyExists
 	}

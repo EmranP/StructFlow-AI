@@ -20,7 +20,6 @@ CREATE TABLE IF NOT EXISTS public.projects (
     architecture TEXT,
     features TEXT,
     additional_info TEXT,
-    prompt TEXT NOT NULL,
 
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()

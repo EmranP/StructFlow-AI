@@ -24,12 +24,12 @@ func NewProjectRepository(
 	}
 }
 
-const getProjectSQL = "id, title, project_type, stack, architecture, features, additional_info, prompt, created_at, updated_at"
+const getProjectSQL = "id, title, project_type, stack, architecture, features, additional_info, created_at, updated_at"
 
 func (r *ProjectRepository) Create(
 	ctx context.Context,
 	project *domain.Project,
-) error {
+) (uuid.UUID, error) {
 
 	query := `
 		INSERT INTO public.projects(
@@ -40,15 +40,17 @@ func (r *ProjectRepository) Create(
 			stack,
 			architecture,
 			features,
-			additional_info,
-			prompt
+			additional_info
 		)
 		VALUES(
-			$1,$2,$3,$4,$5,$6,$7,$8,$9
+			$1,$2,$3,$4,$5,$6,$7,$8
 		)
+		RETURNING id;
 	`
 
-	_, err := r.db.Exec(
+	var projectId uuid.UUID
+
+	err := r.db.QueryRow(
 		ctx,
 		query,
 
@@ -60,10 +62,15 @@ func (r *ProjectRepository) Create(
 		project.Architecture,
 		project.Features,
 		project.AdditionalInfo,
-		project.Prompt,
+	).Scan(
+		&projectId,
 	)
 
-	return err
+	if err != nil {
+		return uuid.UUID{}, err
+	}
+
+	return projectId, err
 }
 
 func (r *ProjectRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Project, error) {
@@ -82,7 +89,6 @@ func (r *ProjectRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.
 		&project.Architecture,
 		&project.Features,
 		&project.AdditionalInfo,
-		&project.Prompt,
 		&project.CreatedAt,
 		&project.UpdatedAt,
 	)
@@ -130,7 +136,6 @@ func (r *ProjectRepository) GetAllByUserID(ctx context.Context,
 			&p.Architecture,
 			&p.Features,
 			&p.AdditionalInfo,
-			&p.Prompt,
 			&p.CreatedAt,
 			&p.UpdatedAt,
 		)
@@ -174,8 +179,7 @@ func (r *ProjectRepository) Update(
 		stack = COALESCE($3, stack),
 		architecture = COALESCE($4, architecture),
 		features = COALESCE($5, features),
-		additional_info = COALESCE($6, additional_info),
-		prompt = COALESCE($7, prompt)
+		additional_info = COALESCE($6, additional_info)
 		WHERE id = $8 AND user_id = $9
 	`
 
@@ -188,7 +192,7 @@ func (r *ProjectRepository) Update(
 		&data.Architecture,
 		&data.Features,
 		&data.AdditionalInfo,
-		&data.Prompt,
+
 		id,
 		userID,
 	)

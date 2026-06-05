@@ -6,6 +6,10 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/ai"
+	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/ai/parser"
+	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/ai/prompt"
+	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/ai/schema"
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/domain"
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/generation/status"
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/repository"
@@ -13,81 +17,123 @@ import (
 
 type Generator struct {
 	generationRepo repository.GenerationRepository
+	templateRepo   repository.GeneratedTemplateRepository
+	projectRepo    repository.ProjectRepository
 
-	templateRepo repository.GeneratedTemplateRepository
+	aiProvider ai.Provider
 }
 
 func New(
 	generationRepo repository.GenerationRepository,
 	templateRepo repository.GeneratedTemplateRepository,
+	projectRepo repository.ProjectRepository,
+	aiProvider ai.Provider,
 ) *Generator {
 
 	return &Generator{
 		generationRepo: generationRepo,
-
-		templateRepo: templateRepo,
+		templateRepo:   templateRepo,
+		projectRepo:    projectRepo,
+		aiProvider:     aiProvider,
 	}
 }
 
 func (g *Generator) Process(
 	ctx context.Context,
 	generationID uuid.UUID,
+	projectID uuid.UUID,
 ) {
-	err := g.generationRepo.UpdateStatus(
+	errGen := g.generationRepo.UpdateStatus(
 		ctx,
 		generationID,
 		status.Processing,
 		nil,
 	)
 
+	if errGen != nil {
+		return
+	}
+
+	project, err := g.projectRepo.GetByID(
+		ctx,
+		projectID,
+	)
+
 	if err != nil {
 		return
 	}
 
-	simple := map[string]any{
-		"name": "simple",
-
-		"directories": []string{
-			"cmd",
-			"internal",
-			"pkg",
-		},
-
-		"files": []string{
-			"main.go",
-			".env",
-		},
-	}
-	medium := map[string]any{
-		"name": "medium",
-
-		"directories": []string{
-			"cmd",
-			"internal",
-			"pkg",
-			"configs",
-			"migrations",
-		},
-	}
-	enterprise := map[string]any{
-		"name": "enterprise",
-
-		"directories": []string{
-			"cmd",
-			"internal",
-			"pkg",
-			"configs",
-			"deployments",
-			"api",
-			"scripts",
-		},
+	if project == nil {
+		return
 	}
 
-	simpleContent, errSimple := json.Marshal(simple)
-	mediumContent, errMedium := json.Marshal(medium)
-	enterpriseContent, errEnterprise := json.Marshal(enterprise)
+	promptText := prompt.BuildProjectPrompt(
+		project,
+	)
 
-	if errSimple != nil || errMedium != nil || errEnterprise != nil {
+	response, err := g.aiProvider.GenerateStructure(
+		ctx,
+		promptText,
+	)
+
+	if err != nil {
+		g.fail(
+			ctx,
+			generationID,
+			err.Error(),
+		)
+
+		return
+	}
+
+	cleaned := parser.CleanJSON(
+		response,
+	)
+
+	var structures schema.ProjectStructures
+
+	err = json.Unmarshal(
+		[]byte(cleaned),
+		&structures,
+	)
+
+	if err != nil {
+		g.fail(
+			ctx,
+			generationID,
+			err.Error(),
+		)
+
+		return
+	}
+
+	simpleContent, errSimple := json.Marshal(structures.Simple)
+	mediumContent, errMedium := json.Marshal(structures.Medium)
+	enterpriseContent, errEnterprise := json.Marshal(structures.Enterprise)
+
+	if errSimple != nil {
+		g.fail(
+			ctx,
+			generationID,
+			errSimple.Error(),
+		)
+
+		return
+	} else if errMedium != nil {
+		g.fail(
+			ctx,
+			generationID,
+			errMedium.Error(),
+		)
+
+		return
+	} else if errEnterprise != nil {
+		g.fail(
+			ctx,
+			generationID,
+			errEnterprise.Error(),
+		)
+
 		return
 	}
 
@@ -96,6 +142,12 @@ func (g *Generator) Process(
 	errTemp = g.addTemp(ctx, generationID, "enterprise", enterpriseContent)
 
 	if errTemp != nil {
+		g.fail(
+			ctx,
+			generationID,
+			errTemp.Error(),
+		)
+
 		return
 	}
 
@@ -107,6 +159,12 @@ func (g *Generator) Process(
 	)
 
 	if err != nil {
+		g.fail(
+			ctx,
+			generationID,
+			err.Error(),
+		)
+
 		return
 	}
 }
@@ -126,4 +184,17 @@ func (g *Generator) addTemp(ctx context.Context, genID uuid.UUID, genType string
 	)
 
 	return err
+}
+
+func (g *Generator) fail(
+	ctx context.Context,
+	generationID uuid.UUID,
+	message string,
+) {
+	_ = g.generationRepo.UpdateStatus(
+		ctx,
+		generationID,
+		status.Failed,
+		&message,
+	)
 }

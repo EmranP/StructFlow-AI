@@ -11,7 +11,7 @@ type ProjectRepository interface {
 	Create(
 		ctx context.Context,
 		project *domain.Project,
-	) error
+	) (uuid.UUID, error)
 
 	GetByID(
 		ctx context.Context,

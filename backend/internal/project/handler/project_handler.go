@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/project/dto"
@@ -51,20 +52,21 @@ func (h *ProjectHandler) Create(c *fiber.Ctx) error {
 		})
 	}
 
-	err = h.projectUC.Add(
+	projectId, err := h.projectUC.Add(
 		c.Context(),
 		userID,
 		&req,
 	)
-
 	if err != nil {
+		fmt.Println(err.Error())
 		return err
 	}
 
 	return c.Status(
 		fiber.StatusCreated,
 	).JSON(fiber.Map{
-		"message": "user created",
+		"message": "project created",
+		"id":      projectId,
 	})
 }
 

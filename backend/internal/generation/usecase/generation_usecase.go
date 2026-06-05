@@ -79,6 +79,7 @@ func (u *generationUseCase) Add(
 	go u.generator.Process(
 		ctx,
 		generation.ID,
+		project.ID,
 	)
 
 	return generation, nil
