@@ -72,6 +72,30 @@ func ErrorHandler(
 			},
 		)
 
+	case stdErrors.Is(
+		err,
+		customerrors.ErrProjectNotFound,
+	):
+		return c.Status(
+			fiber.StatusNotFound,
+		).JSON(
+			fiber.Map{
+				"error": err.Error(),
+			},
+		)
+
+	case stdErrors.Is(
+		err,
+		customerrors.ErrGenerationNotFound,
+	):
+		return c.Status(
+			fiber.StatusNotFound,
+		).JSON(
+			fiber.Map{
+				"error": err.Error(),
+			},
+		)
+
 	default:
 		return c.Status(
 			fiber.StatusInternalServerError,

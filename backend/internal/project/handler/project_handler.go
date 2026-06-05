@@ -69,17 +69,7 @@ func (h *ProjectHandler) Create(c *fiber.Ctx) error {
 }
 
 func (h *ProjectHandler) GetById(c *fiber.Ctx) error {
-	projectIdStr := c.Params("id")
-
-	if projectIdStr == "" {
-		return c.Status(
-			fiber.StatusNotFound,
-		).JSON(fiber.Map{
-			"message": "Project ID is empty",
-		})
-	}
-
-	projectId, err := uuid.Parse(projectIdStr)
+	projectId, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return err
 	}

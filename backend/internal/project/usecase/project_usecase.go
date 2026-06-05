@@ -90,7 +90,6 @@ func (u *projectUseCase) FindByUserID(
 
 	projects, err := u.projectRepo.GetAllByUserID(ctx, userID, limit, offset)
 	if err != nil {
-
 		return nil, 0, err
 	}
 

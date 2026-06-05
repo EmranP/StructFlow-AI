@@ -1,14 +1,21 @@
 package domain
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type Generation struct {
-	ID string
+	ID uuid.UUID
 
-	ProjectID string
+	ProjectID uuid.UUID
 
 	Status string
 
+	ErrorMessage *string
+
 	CreatedAt time.Time
+
 	UpdatedAt time.Time
 }

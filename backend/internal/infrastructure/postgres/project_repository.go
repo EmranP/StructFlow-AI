@@ -76,7 +76,6 @@ func (r *ProjectRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.
 
 	err := r.db.QueryRow(ctx, query, id).Scan(
 		&project.ID,
-		&project.UserID,
 		&project.Title,
 		&project.ProjectType,
 		&project.Stack,
@@ -89,7 +88,7 @@ func (r *ProjectRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.
 	)
 
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, customerrors.ErrUserNotFound
+		return nil, customerrors.ErrProjectNotFound
 	}
 
 	if err != nil {
@@ -109,7 +108,7 @@ func (r *ProjectRepository) GetAllByUserID(ctx context.Context,
 			WHERE user_id = $1
 			ORDER BY created_at DESC
 			LIMIT $2
-			OFFSET $3
+			OFFSET $3;
 	`, getProjectSQL)
 
 	projects := make([]domain.Project, 0)

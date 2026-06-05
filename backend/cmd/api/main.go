@@ -14,6 +14,9 @@ import (
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/auth/token"
 	authusecase "github.com/EmranP/Design-Struct-Project-AI/backend/internal/auth/usecase"
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/container"
+	generationhandler "github.com/EmranP/Design-Struct-Project-AI/backend/internal/generation/handler"
+	generationservice "github.com/EmranP/Design-Struct-Project-AI/backend/internal/generation/service"
+	generationusecase "github.com/EmranP/Design-Struct-Project-AI/backend/internal/generation/usecase"
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/infrastructure/database"
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/infrastructure/logger"
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/infrastructure/postgres"
@@ -21,7 +24,6 @@ import (
 	projectusecase "github.com/EmranP/Design-Struct-Project-AI/backend/internal/project/usecase"
 	httputils "github.com/EmranP/Design-Struct-Project-AI/backend/internal/shared/http"
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/shared/validator"
-	userhandler "github.com/EmranP/Design-Struct-Project-AI/backend/internal/user/handler"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -49,12 +51,16 @@ func main() {
 
 	userRepo := postgres.NewUserRepository(db)
 	projectRepo := postgres.NewProjectRepository(db)
+	generationRepo := postgres.NewGenerationRepository(db)
+	templateRepo := postgres.NewGeneratedTemplateRepository(db)
 
 	c := &container.Container{
-		DB:                db,
-		Logger:            logg,
-		UserRepository:    userRepo,
-		ProjectRepository: projectRepo,
+		DB:                          db,
+		Logger:                      logg,
+		UserRepository:              userRepo,
+		ProjectRepository:           projectRepo,
+		GenerationRepository:        generationRepo,
+		GeneratedTemplateRepository: templateRepo,
 	}
 
 	passwordService := password.New()
@@ -78,9 +84,35 @@ func main() {
 		authUC,
 		v,
 	)
+	projectUC := projectusecase.New(
+		projectRepo,
+	)
+	projectHandler := projectHandle.New(
+		projectUC,
+		v,
+	)
+	generator := generationservice.New(
+		generationRepo,
+		templateRepo,
+	)
+	generationUC := generationusecase.New(
+		projectRepo,
+		generationRepo,
+		templateRepo,
+		generator,
+	)
+	generationHandler := generationhandler.New(
+		generationUC,
+	)
 
 	auth := api.Group("/auth")
+	project := api.Group("/project", jwtMiddleware.Protected)
+	generations := api.Group(
+		"/gen",
+		jwtMiddleware.Protected,
+	)
 
+	// Auth Route
 	auth.Post(
 		"/register",
 		authHandler.Register,
@@ -91,22 +123,7 @@ func main() {
 		authHandler.Login,
 	)
 
-	api.Get(
-		"/me",
-		jwtMiddleware.Protected,
-		userhandler.Me,
-	)
-
-	projectUC := projectusecase.New(
-		projectRepo,
-	)
-	projectHandler := projectHandle.New(
-		projectUC,
-		v,
-	)
-
-	project := api.Group("/project", jwtMiddleware.Protected)
-
+	// Project Route
 	project.Post(
 		"/new",
 		projectHandler.Create,
@@ -131,6 +148,24 @@ func main() {
 	project.Delete(
 		"/remove/:id",
 		projectHandler.Delete,
+	)
+	// Gen
+	project.Post(
+		"/gen/:id",
+		generationHandler.Create,
+	)
+	generations.Get(
+		"/all/:id",
+		generationHandler.GetAll,
+	)
+	generations.Get(
+		"/:id",
+		generationHandler.GetByID,
+	)
+	// Temp
+	generations.Get(
+		"/:id/templates",
+		generationHandler.GetTemplates,
 	)
 
 	app.Use(func(c *fiber.Ctx) error {
