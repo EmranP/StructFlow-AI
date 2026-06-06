@@ -5,6 +5,7 @@ import (
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/auth/usecase"
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/shared/validator"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 type AuthHandler struct {
@@ -82,6 +83,38 @@ func (h *AuthHandler) Login(
 	return c.JSON(
 		dto.AuthResponse{
 			AccessToken: token,
+		},
+	)
+}
+
+func (h *AuthHandler) Me(c *fiber.Ctx) error {
+	userIdStr, ok := c.Locals("userId").(string)
+	if !ok || userIdStr == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "unauthorized: user id not found in token",
+		})
+	}
+
+	userID, err := uuid.Parse(userIdStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "invalid user id format",
+		})
+	}
+
+	user, errMe := h.authUC.Me(
+		c.Context(),
+		userID,
+	)
+	if errMe != nil {
+		return err
+	}
+
+	return c.Status(
+		fiber.StatusOK,
+	).JSON(
+		fiber.Map{
+			"id": user,
 		},
 	)
 }

@@ -180,7 +180,7 @@ func (r *ProjectRepository) Update(
 		architecture = COALESCE($4, architecture),
 		features = COALESCE($5, features),
 		additional_info = COALESCE($6, additional_info)
-		WHERE id = $8 AND user_id = $9
+		WHERE id = $7 AND user_id = $8
 	`
 
 	_, err := r.db.Exec(
@@ -192,7 +192,6 @@ func (r *ProjectRepository) Update(
 		&data.Architecture,
 		&data.Features,
 		&data.AdditionalInfo,
-
 		id,
 		userID,
 	)

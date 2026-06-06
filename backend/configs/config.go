@@ -18,6 +18,7 @@ type Config struct {
 	AIKey string
 
 	JWTSecret string
+	OriginUrl string
 }
 
 func Load() (*Config, error) {
@@ -39,5 +40,6 @@ func Load() (*Config, error) {
 		AIKey: os.Getenv("API_AI_KEY"),
 
 		JWTSecret: os.Getenv("JWT_SECRET"),
+		OriginUrl: os.Getenv("CLIENT_URL"),
 	}, nil
 }

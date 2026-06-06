@@ -100,3 +100,15 @@ func (u *authUseCase) Register(
 		user,
 	)
 }
+
+func (u *authUseCase) Me(
+	ctx context.Context,
+	userID uuid.UUID,
+) (string, error) {
+	user, err := u.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return "", err
+	}
+
+	return user.ID.String(), nil
+}

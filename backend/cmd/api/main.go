@@ -10,21 +10,22 @@ import (
 	"github.com/EmranP/Design-Struct-Project-AI/backend/configs"
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/ai/gemini"
 	authHandle "github.com/EmranP/Design-Struct-Project-AI/backend/internal/auth/handler"
-	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/auth/middleware"
+	authMiddleware "github.com/EmranP/Design-Struct-Project-AI/backend/internal/auth/middleware"
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/auth/password"
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/auth/token"
-	authusecase "github.com/EmranP/Design-Struct-Project-AI/backend/internal/auth/usecase"
+	authUseCase "github.com/EmranP/Design-Struct-Project-AI/backend/internal/auth/usecase"
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/container"
-	generationhandler "github.com/EmranP/Design-Struct-Project-AI/backend/internal/generation/handler"
-	generationservice "github.com/EmranP/Design-Struct-Project-AI/backend/internal/generation/service"
-	generationusecase "github.com/EmranP/Design-Struct-Project-AI/backend/internal/generation/usecase"
+	generationHandler "github.com/EmranP/Design-Struct-Project-AI/backend/internal/generation/handler"
+	generationService "github.com/EmranP/Design-Struct-Project-AI/backend/internal/generation/service"
+	generationUseCase "github.com/EmranP/Design-Struct-Project-AI/backend/internal/generation/usecase"
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/generation/zip"
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/infrastructure/database"
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/infrastructure/logger"
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/infrastructure/postgres"
 	projectHandle "github.com/EmranP/Design-Struct-Project-AI/backend/internal/project/handler"
-	projectusecase "github.com/EmranP/Design-Struct-Project-AI/backend/internal/project/usecase"
-	httputils "github.com/EmranP/Design-Struct-Project-AI/backend/internal/shared/http"
+	projectUseCase "github.com/EmranP/Design-Struct-Project-AI/backend/internal/project/usecase"
+	httpUtils "github.com/EmranP/Design-Struct-Project-AI/backend/internal/shared/http"
+	sharedMiddleware "github.com/EmranP/Design-Struct-Project-AI/backend/internal/shared/middleware"
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/shared/validator"
 	"github.com/gofiber/fiber/v2"
 )
@@ -46,9 +47,14 @@ func main() {
 
 	app := fiber.New(
 		fiber.Config{
-			ErrorHandler: httputils.ErrorHandler,
+			ErrorHandler: httpUtils.ErrorHandler,
 		},
 	)
+
+	app.Use(
+		sharedMiddleware.CORS(cfg),
+	)
+
 	api := app.Group("/api")
 
 	userRepo := postgres.NewUserRepository(db)
@@ -69,7 +75,7 @@ func main() {
 	tokenService := token.New(
 		cfg.JWTSecret,
 	)
-	jwtMiddleware := middleware.
+	jwtMiddleware := authMiddleware.
 		NewJWTMiddleware(
 			tokenService,
 		)
@@ -83,7 +89,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	generator := generationservice.New(
+	generator := generationService.New(
 		generationRepo,
 		templateRepo,
 		projectRepo,
@@ -91,12 +97,12 @@ func main() {
 	)
 	zipService := zip.New()
 	// UseCase
-	authUC := authusecase.New(
+	authUC := authUseCase.New(
 		userRepo,
 		passwordService,
 		tokenService,
 	)
-	generationUC := generationusecase.New(
+	generationUC := generationUseCase.New(
 		projectRepo,
 		generationRepo,
 		templateRepo,
@@ -107,14 +113,14 @@ func main() {
 		authUC,
 		v,
 	)
-	projectUC := projectusecase.New(
+	projectUC := projectUseCase.New(
 		projectRepo,
 	)
 	projectHandler := projectHandle.New(
 		projectUC,
 		v,
 	)
-	generationHandler := generationhandler.New(
+	generationHandler := generationHandler.New(
 		generationUC,
 	)
 
@@ -130,10 +136,14 @@ func main() {
 		"/register",
 		authHandler.Register,
 	)
-
 	auth.Post(
 		"/login",
 		authHandler.Login,
+	)
+	auth.Get(
+		"/me",
+		jwtMiddleware.Protected,
+		authHandler.Me,
 	)
 
 	// Project Route

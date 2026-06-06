@@ -1,6 +1,10 @@
 package usecase
 
-import "context"
+import (
+	"context"
+
+	"github.com/google/uuid"
+)
 
 type AuthUseCase interface {
 	Register(
@@ -13,5 +17,10 @@ type AuthUseCase interface {
 		ctx context.Context,
 		email string,
 		password string,
+	) (string, error)
+
+	Me(
+		ctx context.Context,
+		id uuid.UUID,
 	) (string, error)
 }

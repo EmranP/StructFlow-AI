@@ -62,13 +62,25 @@ func (u *projectUseCase) Add(
 func (u *projectUseCase) FindByID(
 	ctx context.Context,
 	id uuid.UUID,
-) (*domain.Project, error) {
+) (*dto.ProjectResponse, error) {
 	project, err := u.projectRepo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	return project, nil
+	projectDto := &dto.ProjectResponse{
+		ID:             project.ID,
+		Title:          project.Title,
+		ProjectType:    project.ProjectType,
+		Stack:          project.Stack,
+		Architecture:   project.Architecture,
+		Features:       project.Features,
+		AdditionalInfo: project.AdditionalInfo,
+		CreatedAt:      project.CreatedAt,
+		UpdatedAt:      project.UpdatedAt,
+	}
+
+	return projectDto, nil
 }
 
 func (u *projectUseCase) FindByUserID(
