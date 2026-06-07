@@ -5,7 +5,7 @@
 ![StructFlow Banner](https://img.shields.io/badge/StructFlow-AI%20Powered-6366f1?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHRleHQgeT0iMjAiIGZvbnQtc2l6ZT0iMjAiPuKmoTwvdGV4dD48L3N2Zz4=)
 
 ![Angular](https://img.shields.io/badge/Angular-17-DD0031?style=flat-square&logo=angular)
-![Go](https://img.shields.io/badge/Go-1.21-00ADD8?style=flat-square&logo=go)
+![Go](https://img.shields.io/badge/Go-1.25-00ADD8?style=flat-square&logo=go)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql)
 ![Docker](https://img.shields.io/badge/Docker-ready-2496ED?style=flat-square&logo=docker)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
