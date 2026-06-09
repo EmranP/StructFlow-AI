@@ -1,7 +1,10 @@
 {
 	"version": 2,
-	"public": true,
 	"cleanUrls": true,
-	"outputDirectory": "dist/structflow/browser",
-	"routes": [{ "src": "/([^\\.]*)", "dest": "/index.html" }]
+	"rewrites": [
+		{
+			"source": "/(.*)",
+			"destination": "/index.html"
+		}
+	]
 }
