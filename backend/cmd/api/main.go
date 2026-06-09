@@ -8,7 +8,11 @@ import (
 	"syscall"
 
 	"github.com/EmranP/Design-Struct-Project-AI/backend/configs"
+	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/ai"
+	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/ai/claude"
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/ai/gemini"
+	aiHandle "github.com/EmranP/Design-Struct-Project-AI/backend/internal/ai/handler"
+	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/ai/openai"
 	authHandle "github.com/EmranP/Design-Struct-Project-AI/backend/internal/auth/handler"
 	authMiddleware "github.com/EmranP/Design-Struct-Project-AI/backend/internal/auth/middleware"
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/auth/password"
@@ -78,25 +82,37 @@ func main() {
 	tokenService := token.New(
 		cfg.JWTSecret,
 	)
+
 	jwtMiddleware := authMiddleware.
 		NewJWTMiddleware(
 			tokenService,
 		)
 
 	v := validator.New()
-	aiService, err := gemini.New(
+
+	geminiProvider, err := gemini.New(
 		context.Background(),
-		cfg.AIKey,
+		cfg.AIGeminiKey,
 	)
 	if err != nil {
 		log.Fatal(err)
 	}
+	claudeProvider := claude.New(
+		cfg.AIClaudeKey,
+	)
+	gptProvider := openai.New(
+		cfg.AIChatGPTKey,
+	)
+	aiManager := ai.NewManager(
+		geminiProvider,
+		claudeProvider,
+		gptProvider,
+	)
 
 	generator := generationService.New(
 		generationRepo,
 		templateRepo,
 		projectRepo,
-		aiService,
 	)
 	zipService := zip.New()
 	emailService := email.NewResend(
@@ -126,6 +142,7 @@ func main() {
 		templateRepo,
 		generator,
 		zipService,
+		aiManager,
 	)
 	authHandler := authHandle.New(
 		authUC,
@@ -142,87 +159,95 @@ func main() {
 	generationHandler := generationHandler.New(
 		generationUC,
 	)
+	aiHandler := aiHandle.NewAI(aiManager)
 
-	auth := api.Group("/auth")
-	project := api.Group("/project", jwtMiddleware.Protected)
-	generations := api.Group(
+	authRoute := api.Group("/auth")
+	aiRoute := api.Group("/ai", jwtMiddleware.Protected)
+	projectRoute := api.Group("/project", jwtMiddleware.Protected)
+	generationsRoute := api.Group(
 		"/gen",
 		jwtMiddleware.Protected,
 	)
 
 	// Auth Route
-	auth.Post(
+	authRoute.Post(
 		"/register",
 		authHandler.Register,
 	)
-	auth.Post(
+	authRoute.Post(
 		"/login",
 		authHandler.Login,
 	)
-	auth.Post(
+	authRoute.Post(
 		"/verify-email",
 		authHandler.VerifyEmail,
 	)
-	auth.Get(
+	authRoute.Get(
 		"/me",
 		jwtMiddleware.Protected,
 		authHandler.Me,
 	)
-	auth.Get(
+	authRoute.Get(
 		"/refresh",
 		authHandler.Refresh,
 	)
-	auth.Post(
+	authRoute.Post(
 		"/logout",
 		jwtMiddleware.Protected,
 		authHandler.Logout,
 	)
+	// Update swagger docs after completed client side
+	// AI
+	aiRoute.Get(
+		"/models",
+		aiHandler.Models,
+	)
 
 	// Project Route
-	project.Post(
+	projectRoute.Post(
 		"/new",
 		projectHandler.Create,
 	)
-	project.Get(
+	projectRoute.Get(
 		"/all",
 		projectHandler.GetAll,
 	)
-	project.Delete(
+	projectRoute.Delete(
 		"/remove/all",
 		projectHandler.DeleteAll,
 	)
 
-	project.Get(
+	projectRoute.Get(
 		"/:id",
 		projectHandler.GetById,
 	)
-	project.Patch(
+	projectRoute.Patch(
 		"/edit/:id",
 		projectHandler.Edit,
 	)
-	project.Delete(
+	projectRoute.Delete(
 		"/remove/:id",
 		projectHandler.Delete,
 	)
 	// Gen
-	project.Post(
+	projectRoute.Post(
 		"/gen/:id",
 		generationHandler.Create,
 	)
-	generations.Get(
+	generationsRoute.Get(
 		"/all/:id",
 		generationHandler.GetAll,
 	)
-	generations.Get(
+	generationsRoute.Get(
 		"/:id",
 		generationHandler.GetByID,
 	)
 	// Temp
-	generations.Get(
+	generationsRoute.Get(
 		"/:id/templates",
 		generationHandler.GetTemplates,
 	)
-	generations.Get(
+	generationsRoute.Get(
 		"/download/:id",
 		generationHandler.Download,
 	)

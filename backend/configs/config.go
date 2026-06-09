@@ -16,9 +16,9 @@ type Config struct {
 	DBPass string
 	DBName string
 
-	AIKey           string
-	ResendEmailKey  string
-	ResendEmailFrom string
+	AIGeminiKey  string
+	AIClaudeKey  string
+	AIChatGPTKey string
 
 	SmtpHost     string
 	SmtpPort     int
@@ -51,9 +51,9 @@ func Load() (*Config, error) {
 		DBPass: os.Getenv("DB_PASS"),
 		DBName: os.Getenv("DB_NAME"),
 
-		AIKey:           os.Getenv("API_AI_KEY"),
-		ResendEmailKey:  os.Getenv("API_RESEND_EMAIL_KEY"),
-		ResendEmailFrom: os.Getenv("API_RESEND_EMAIL_FROM"),
+		AIGeminiKey:  os.Getenv("API_AI_GEMINI_KEY"),
+		AIClaudeKey:  os.Getenv("API_AI_CLAUDE_KEY"),
+		AIChatGPTKey: os.Getenv("API_AI_CHAT_GPT_KEY"),
 
 		SmtpHost:     os.Getenv("SMTP_HOST"),
 		SmtpPort:     smtpPort,

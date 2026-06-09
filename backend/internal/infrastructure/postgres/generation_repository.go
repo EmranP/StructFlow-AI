@@ -32,13 +32,15 @@ func (r *GenerationRepository) Create(
 			id,
 			project_id,
 			status,
+			model,
 			error_message
 		)
 		VALUES(
 			$1,
 			$2,
 			$3,
-			$4
+			$4,
+			$5
 		)
 	`
 
@@ -48,6 +50,7 @@ func (r *GenerationRepository) Create(
 		generation.ID,
 		generation.ProjectID,
 		generation.Status,
+		generation.Model,
 		generation.ErrorMessage,
 	)
 
@@ -65,6 +68,7 @@ func (r *GenerationRepository) GetAllByProjectID(
 			id,
 			project_id,
 			status,
+			model,
 			error_message,
 			created_at,
 			updated_at
@@ -89,6 +93,7 @@ func (r *GenerationRepository) GetAllByProjectID(
 			&g.ID,
 			&g.ProjectID,
 			&g.Status,
+			&g.Model,
 			&g.ErrorMessage,
 			&g.CreatedAt,
 			&g.UpdatedAt,
@@ -118,6 +123,7 @@ func (r *GenerationRepository) GetByID(
 			id,
 			project_id,
 			status,
+			model,
 			error_message,
 			created_at,
 			updated_at
@@ -135,6 +141,7 @@ func (r *GenerationRepository) GetByID(
 		&generation.ID,
 		&generation.ProjectID,
 		&generation.Status,
+		&generation.Model,
 		&generation.ErrorMessage,
 		&generation.CreatedAt,
 		&generation.UpdatedAt,
@@ -175,18 +182,18 @@ func (r *GenerationRepository) UpdateStatus(
 	query := `
 		UPDATE public.generations
 		SET
-			status = $2,
-			error_message = $3,
+			status = $1,
+			error_message = $2,
 			updated_at = NOW()
-		WHERE id = $1
+		WHERE id = $3
 	`
 
 	_, err := r.db.Exec(
 		ctx,
 		query,
-		id,
 		status,
 		errorMessage,
+		id,
 	)
 
 	return err

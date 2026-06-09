@@ -1,0 +1,1 @@
+ALTER TABLE public.generations ADD COLUMN model VARCHAR(30) NOT NULL;

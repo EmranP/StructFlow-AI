@@ -25,6 +25,14 @@ var (
 		"Session not found!",
 	)
 
+	ErrAiProviderNotFound = errors.New(
+		"AI provider not found",
+	)
+	ErrAiProviderInvalid            = errors.New("invalid model")
+	ErrAiProviderGeminiUnavailable  = errors.New("gemini unavailable")
+	ErrAiProviderClaudeUnavailable  = errors.New("claude unavailable")
+	ErrAiProviderChatGPTUnavailable = errors.New("chatGPT unavailable")
+
 	ErrInvalidVerificationCode = errors.New(
 		"invalid verification code",
 	)

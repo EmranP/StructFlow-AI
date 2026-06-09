@@ -1,0 +1,1 @@
+ALTER TABLE public.generations ADD DROP model;

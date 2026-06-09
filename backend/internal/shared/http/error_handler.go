@@ -156,6 +156,66 @@ func ErrorHandler(
 			},
 		)
 
+	case stdErrors.Is(
+		err,
+		customerrors.ErrAiProviderNotFound,
+	):
+		return c.Status(
+			fiber.StatusNotFound,
+		).JSON(
+			fiber.Map{
+				"message": err.Error(),
+			},
+		)
+
+	case stdErrors.Is(
+		err,
+		customerrors.ErrAiProviderGeminiUnavailable,
+	):
+		return c.Status(
+			fiber.StatusBadRequest,
+		).JSON(
+			fiber.Map{
+				"message": err.Error(),
+			},
+		)
+
+	case stdErrors.Is(
+		err,
+		customerrors.ErrAiProviderClaudeUnavailable,
+	):
+		return c.Status(
+			fiber.StatusBadRequest,
+		).JSON(
+			fiber.Map{
+				"message": err.Error(),
+			},
+		)
+
+	case stdErrors.Is(
+		err,
+		customerrors.ErrAiProviderChatGPTUnavailable,
+	):
+		return c.Status(
+			fiber.StatusBadRequest,
+		).JSON(
+			fiber.Map{
+				"message": err.Error(),
+			},
+		)
+
+	case stdErrors.Is(
+		err,
+		customerrors.ErrAiProviderInvalid,
+	):
+		return c.Status(
+			fiber.StatusBadRequest,
+		).JSON(
+			fiber.Map{
+				"message": err.Error(),
+			},
+		)
+
 	default:
 		return c.Status(
 			fiber.StatusInternalServerError,

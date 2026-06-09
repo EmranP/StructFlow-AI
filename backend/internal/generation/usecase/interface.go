@@ -13,6 +13,7 @@ type GenerationUseCase interface {
 	Add(
 		ctx context.Context,
 		projectID uuid.UUID,
+		model string,
 	) (*domain.Generation, error)
 
 	FindByID(

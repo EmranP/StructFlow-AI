@@ -6,7 +6,7 @@ import (
 	"google.golang.org/genai"
 )
 
-type provider struct {
+type GeminiProvider struct {
 	client *genai.Client
 	model  string
 }
@@ -14,7 +14,7 @@ type provider struct {
 func New(
 	ctx context.Context,
 	apiKey string,
-) (*provider, error) {
+) (*GeminiProvider, error) {
 
 	client, err := genai.NewClient(
 		ctx,
@@ -28,13 +28,17 @@ func New(
 		return nil, err
 	}
 
-	return &provider{
+	return &GeminiProvider{
 		client: client,
 		model:  "gemini-2.5-flash",
 	}, nil
 }
 
-func (p *provider) GenerateStructure(
+func (g *GeminiProvider) Name() string {
+	return "gemini"
+}
+
+func (p *GeminiProvider) GenerateStructure(
 	ctx context.Context,
 	prompt string,
 ) (string, error) {
@@ -43,7 +47,9 @@ func (p *provider) GenerateStructure(
 		ctx,
 		p.model,
 		genai.Text(prompt),
-		nil,
+		&genai.GenerateContentConfig{
+			MaxOutputTokens: 8000,
+		},
 	)
 
 	if err != nil {
@@ -51,4 +57,15 @@ func (p *provider) GenerateStructure(
 	}
 
 	return resp.Text(), nil
+}
+
+func (p *GeminiProvider) IsAvailable(
+	ctx context.Context,
+) bool {
+	_, err := p.GenerateStructure(
+		ctx,
+		"ping",
+	)
+
+	return err == nil
 }

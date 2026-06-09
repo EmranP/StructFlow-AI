@@ -34,10 +34,35 @@ func (h *GenerationHandler) Create(
 		return fiber.ErrBadRequest
 	}
 
+	var req dto.GenerationRequest
+
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(
+			fiber.StatusBadRequest,
+		).JSON(
+			fiber.Map{
+				"error": "invalid-body model is not empty",
+			},
+		)
+	}
+
+	switch req.Model {
+
+	case "gpt":
+	case "claude":
+	case "gemini":
+
+	default:
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "invalid body models: gpt, claude, gemini",
+		})
+	}
+
 	generation, err := h.generationUC.
 		Add(
 			c.Context(),
 			projectID,
+			req.Model,
 		)
 
 	if err != nil {

@@ -12,6 +12,7 @@ type Generation struct {
 	ProjectID uuid.UUID
 
 	Status string
+	Model  string
 
 	ErrorMessage *string
 

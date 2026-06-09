@@ -3,9 +3,11 @@ package usecase
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/google/uuid"
 
+	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/ai"
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/domain"
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/generation/dto"
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/generation/service"
@@ -23,6 +25,7 @@ type generationUseCase struct {
 	generationRepo     repository.GenerationRepository
 	generationTempRepo repository.GeneratedTemplateRepository
 	zipService         *zipservice.Service
+	aiManager          *ai.Manager
 }
 
 func New(
@@ -31,6 +34,7 @@ func New(
 	generationTempRepo repository.GeneratedTemplateRepository,
 	generator *service.Generator,
 	zipService *zipservice.Service,
+	aiManager *ai.Manager,
 ) GenerationUseCase {
 	return &generationUseCase{
 		projectRepo:        projectRepo,
@@ -38,12 +42,14 @@ func New(
 		generationTempRepo: generationTempRepo,
 		generator:          generator,
 		zipService:         zipService,
+		aiManager:          aiManager,
 	}
 }
 
 func (u *generationUseCase) Add(
 	ctx context.Context,
 	projectID uuid.UUID,
+	model string,
 ) (*domain.Generation, error) {
 
 	project, err := u.projectRepo.
@@ -65,20 +71,29 @@ func (u *generationUseCase) Add(
 		ID: uuid.New(),
 
 		ProjectID: projectID,
+		Model:     model,
 
 		Status: status.Pending,
 	}
 
 	errNewGen := u.generationRepo.Create(ctx, generation)
 	if errNewGen != nil {
-
+		fmt.Print()
 		return nil, errNewGen
+	}
+
+	fmt.Println("Ai")
+
+	aiProvider, ok := u.aiManager.Get(model)
+	if !ok {
+		return nil, customerrors.ErrAiProviderInvalid
 	}
 
 	go u.generator.Process(
 		ctx,
 		generation.ID,
 		project.ID,
+		aiProvider,
 	)
 
 	return generation, nil

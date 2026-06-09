@@ -13,28 +13,24 @@ import (
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/domain"
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/generation/status"
 	"github.com/EmranP/Design-Struct-Project-AI/backend/internal/repository"
+	// customerrors "github.com/EmranP/Design-Struct-Project-AI/backend/internal/shared/errors"
 )
 
 type Generator struct {
 	generationRepo repository.GenerationRepository
 	templateRepo   repository.GeneratedTemplateRepository
 	projectRepo    repository.ProjectRepository
-
-	aiProvider ai.Provider
 }
 
 func New(
 	generationRepo repository.GenerationRepository,
 	templateRepo repository.GeneratedTemplateRepository,
 	projectRepo repository.ProjectRepository,
-	aiProvider ai.Provider,
 ) *Generator {
-
 	return &Generator{
 		generationRepo: generationRepo,
 		templateRepo:   templateRepo,
 		projectRepo:    projectRepo,
-		aiProvider:     aiProvider,
 	}
 }
 
@@ -42,6 +38,7 @@ func (g *Generator) Process(
 	ctx context.Context,
 	generationID uuid.UUID,
 	projectID uuid.UUID,
+	provider ai.Provider,
 ) {
 	errGen := g.generationRepo.UpdateStatus(
 		ctx,
@@ -71,7 +68,7 @@ func (g *Generator) Process(
 		project,
 	)
 
-	response, err := g.aiProvider.GenerateStructure(
+	response, err := provider.GenerateStructure(
 		ctx,
 		promptText,
 	)
