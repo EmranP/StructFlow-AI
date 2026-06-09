@@ -8,6 +8,7 @@ import (
 )
 
 type Config struct {
+	ENV     string
 	AppPort string
 
 	DBHost string
@@ -15,6 +16,7 @@ type Config struct {
 	DBUser string
 	DBPass string
 	DBName string
+	DBUrl  string
 
 	AIGeminiKey  string
 	AIClaudeKey  string
@@ -42,6 +44,7 @@ func Load() (*Config, error) {
 	}
 
 	return &Config{
+		ENV:       os.Getenv("ENV"),
 		AppPort:   os.Getenv("APP_PORT"),
 		OriginUrl: os.Getenv("CLIENT_URL"),
 
@@ -50,6 +53,7 @@ func Load() (*Config, error) {
 		DBUser: os.Getenv("DB_USER"),
 		DBPass: os.Getenv("DB_PASS"),
 		DBName: os.Getenv("DB_NAME"),
+		DBUrl:  os.Getenv("DB_URL"),
 
 		AIGeminiKey:  os.Getenv("API_AI_GEMINI_KEY"),
 		AIClaudeKey:  os.Getenv("API_AI_CLAUDE_KEY"),

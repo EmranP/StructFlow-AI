@@ -10,6 +10,7 @@ import (
 )
 
 func NewPostgres(cfg *configs.Config) (*pgxpool.Pool, error) {
+	var dbUrl string
 	dsn := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s",
 		cfg.DBUser,
@@ -19,9 +20,15 @@ func NewPostgres(cfg *configs.Config) (*pgxpool.Pool, error) {
 		cfg.DBName,
 	)
 
+	if cfg.DBUrl == "" || cfg.ENV == "development" {
+		dbUrl = dsn
+	} else {
+		dbUrl = cfg.DBUrl
+	}
+
 	pool, err := pgxpool.New(
 		context.Background(),
-		dsn,
+		dbUrl,
 	)
 
 	if err != nil {
