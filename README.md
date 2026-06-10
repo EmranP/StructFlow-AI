@@ -12,7 +12,7 @@
 
 **Describe your project → AI designs the folder structure → Download and start coding**
 
-[Demo](https://struct-flow-ai.vercel.app/)
+[Demo](https://struct-flow-ai-frontend.vercel.app/)
 
 </div>
 
